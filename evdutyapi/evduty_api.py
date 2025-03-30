@@ -7,6 +7,8 @@ import aiohttp
 from aiohttp import ClientResponseError, ClientResponse
 
 from evdutyapi import Station, Terminal
+from evdutyapi.account import Account
+from evdutyapi.api_response.account_response import AccountResponse
 from evdutyapi.api_response.charging_session_response import ChargingSessionResponse
 from evdutyapi.api_response.station_response import StationResponse
 from evdutyapi.api_response.terminal_details_response import TerminalDetailsResponse
@@ -62,6 +64,15 @@ class EVDutyApi:
             await self._async_get_terminals(stations)
             await self._async_get_sessions(stations)
             return stations
+
+    async def async_get_account(self) -> Account:
+        await self.async_authenticate()
+        async with self.session.get(f'{self.base_url}/v1/account', headers=self.headers) as response:
+            await self._log("async_get_account", response)
+            await self._raise_on_get_error(response)
+            json_account = await response.json()
+            return AccountResponse.from_json(json_account)
+
 
     async def _async_get_terminals(self, stations: List[Station]) -> None:
         for station in stations:
