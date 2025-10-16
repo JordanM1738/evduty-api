@@ -20,6 +20,7 @@ class ChargingSession:
     start_date: datetime
     duration: timedelta
     cost: Dollar
+    session_id: str | None = None
 
     @classmethod
     def no_session(cls) -> Self:

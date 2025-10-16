@@ -9,6 +9,8 @@ from aiohttp import ClientResponse, ClientSession
 
 from . import EVDutyApiError, EVDutyApiInvalidCredentialsError, Station, Terminal
 from .charging_sessions.charging_session_response import ChargingSessionResponse
+from .charging_sessions.session_start_request import SessionStartRequest
+from .charging_sessions.session_start_response import SessionStartResponse
 from .max_charging_current.max_charging_current_request import MaxChargingCurrentRequest
 from .stations.station_response import StationResponse
 from .terminals.terminal_response import TerminalResponse
@@ -65,6 +67,7 @@ class EVDutyApi:
             body = await response.json()
             terminal.network_info = TerminalResponse.from_json_to_network_info(body)
             terminal.charging_profile = TerminalResponse.from_json_to_charging_profile(body)
+            terminal.access_mode = TerminalResponse.from_json_to_access_mode(body)
 
     async def _async_get_session(self, terminal: Terminal) -> None:
         async with await self._get(f'/v1/account/stations/{terminal.station_id}/terminals/{terminal.id}/session') as response:
@@ -78,6 +81,26 @@ class EVDutyApi:
             request = MaxChargingCurrentRequest.from_terminal_response(body, current)
             await self._put(f'/v1/account/stations/{terminal.station_id}/terminals/{terminal.id}', json=request)
 
+    async def async_start_session(self, terminal: Terminal, connector_id: int = 1, 
+                                   target_duration: int = 86400, target_energy: int = 80000,
+                                   target_percentage: int = 100) -> SessionStartResponse:
+        request = SessionStartRequest(
+            station_id=terminal.station_id,
+            terminal_id=terminal.id,
+            connector_id=connector_id,
+            target_duration=target_duration,
+            target_energy=target_energy,
+            target_percentage=target_percentage
+        )
+        
+        async with await self._post('/v1/sessions/start', json=request.to_json()) as response:
+            body = await response.json()
+            return SessionStartResponse.from_json(body)
+
+    async def async_cancel_session(self, session_id: str) -> None:
+        async with await self._post(f'/v1/sessions/{session_id}/cancel') as response:
+            pass
+
     async def _get(self, url: str) -> ClientResponse:
         await self.async_authenticate()
         response = await self.session.get(f'{self.base_url}{url}', headers=self.headers)
@@ -89,6 +112,13 @@ class EVDutyApi:
         await self.async_authenticate()
         response = await self.session.put(f'{self.base_url}{url}', headers=self.headers, json=json)
         await self._log('PUT', url, response, self.headers, json)
+        self._raise_on_error(response)
+        return response
+
+    async def _post(self, url: str, json: dict = None) -> ClientResponse:
+        await self.async_authenticate()
+        response = await self.session.post(f'{self.base_url}{url}', headers=self.headers, json=json)
+        await self._log('POST', url, response, self.headers, json)
         self._raise_on_error(response)
         return response
 

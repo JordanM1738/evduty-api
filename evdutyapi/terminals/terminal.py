@@ -13,6 +13,11 @@ class ChargingStatus(Enum):
     out_of_service = 'outOfService'
 
 
+class AccessMode(Enum):
+    local = 'local'
+    remote = 'remote'
+
+
 @dataclass(frozen=True)
 class NetworkInfo:
     wifi_ssid: str
@@ -39,3 +44,4 @@ class Terminal:
     session: ChargingSession
     network_info: NetworkInfo | None = None
     charging_profile: ChargingProfile | None = None
+    access_mode: AccessMode | None = None

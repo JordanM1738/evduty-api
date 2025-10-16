@@ -130,6 +130,7 @@ class EVdutyApiTest(IsolatedAsyncioTestCase):
                 expected_stations = [StationResponse.from_json(s) for s in stations_response]
                 expected_stations[0].terminals[0].network_info = TerminalResponse.from_json_to_network_info(terminal_response)
                 expected_stations[0].terminals[0].charging_profile = TerminalResponse.from_json_to_charging_profile(terminal_response)
+                expected_stations[0].terminals[0].access_mode = TerminalResponse.from_json_to_access_mode(terminal_response)
                 expected_stations[0].terminals[0].session = ChargingSessionResponse.from_json(session_response)
                 self.assertEqual(stations, expected_stations)
 
