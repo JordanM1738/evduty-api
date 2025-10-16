@@ -1,12 +1,26 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+    HAS_ZONEINFO = True
+except ImportError:
+    HAS_ZONEINFO = False
+
 from .. import ChargingSession
 
 
 class ChargingSessionResponse:
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> ChargingSession:
+        try:
+            if HAS_ZONEINFO:
+                tz = ZoneInfo('US/Eastern')
+            else:
+                tz = timezone(timedelta(hours=-5))
+            start_date = datetime.fromtimestamp(data['chargeStartDate'], tz)
+        except Exception:
+            start_date = datetime.fromtimestamp(data['chargeStartDate'], timezone.utc)
+        
         return ChargingSession(
             is_active=data['isActive'],
             is_charging=data['isCharging'],
@@ -14,9 +28,10 @@ class ChargingSessionResponse:
             amp=data['amp'],
             power=data['power'],
             energy_consumed=data['energyConsumed'],
-            start_date=datetime.fromtimestamp(data['chargeStartDate'], ZoneInfo('US/Eastern')),
+            start_date=start_date,
             duration=timedelta(seconds=data['duration']),
             cost=ChargingSessionResponse.cost_from_json(data),
+            session_id=data.get('sessionId'),
         )
 
     @classmethod

@@ -14,6 +14,7 @@ class TerminalResponseBuilder:
             'alternateCost': 'any',
             'sessionTimeLimits': 'any',
             'costLocal': 0.1234,
+            'accessMode': 'local',
         }
 
     @classmethod
@@ -34,6 +35,10 @@ class TerminalResponseBuilder:
 
     def with_cost_local(self, cost: float | None) -> Self:
         self._data['costLocal'] = cost
+        return self
+
+    def with_access_mode(self, access_mode: str) -> Self:
+        self._data['accessMode'] = access_mode
         return self
 
     def build(self) -> dict:
