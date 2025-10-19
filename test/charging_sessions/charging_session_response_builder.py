@@ -4,6 +4,7 @@ from typing import Self
 class ChargingSessionResponseBuilder:
     def __init__(self):
         self._data = {
+            'id': 'test_session_id',
             'isActive': True,
             'isCharging': True,
             'volt': 240,

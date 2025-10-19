@@ -31,7 +31,7 @@ class ChargingSessionResponse:
             start_date=start_date,
             duration=timedelta(seconds=data['duration']),
             cost=ChargingSessionResponse.cost_from_json(data),
-            session_id=data.get('sessionId'),
+            session_id=data.get('id') or data.get('sessionId'),
         )
 
     @classmethod
