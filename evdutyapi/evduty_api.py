@@ -71,9 +71,13 @@ class EVDutyApi:
 
     async def _async_get_session(self, terminal: Terminal) -> None:
         async with await self._get(f'/v1/account/stations/{terminal.station_id}/terminals/{terminal.id}/session') as response:
-            if await response.text() != '':
+            text = await response.text()
+            if text and text.strip().lower() not in ('null', 'none'):
                 body = await response.json()
                 terminal.session = ChargingSessionResponse.from_json(body)
+            else:
+                from . import ChargingSession
+                terminal.session = ChargingSession.no_session()
 
     async def async_set_terminal_max_charging_current(self, terminal: Terminal, current: int) -> None:
         async with await self._get(f'/v1/account/stations/{terminal.station_id}/terminals/{terminal.id}') as response:
